@@ -1,11 +1,9 @@
-(* begin
+begin
 var dim x, y #;
 x assign 2;
 y assign 2 * x;
 displ y;
-end *)
-
-
-
-10; 11b; 11b 10 33 10b 10d 10D 101B 999 1bh 7o 3o;
-
+(* sample comment ! *)
+dim a @;
+a assign 101.10E+3;
+end
