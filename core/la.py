@@ -26,12 +26,11 @@ class Lexer:
     C - комментарий
     S - разделитель
     K - ключевое слово
-    V - выход
+    V - выход = H
     ER - ошибка
 
-    H -> I | N | S | H
+    H -> I | N2 | N8 | N10 | NF | S | H | ER
     I -> I | K | ER
-    N -> N2
     S -> C | S | ER
     C -> V | ER
     N2 -> N2 | ER | N8 | N10 | NF | NEXP | N8X | N10X | N16 | N16X | N2X | V
@@ -41,34 +40,84 @@ class Lexer:
     N2X -> N16 | N16X | ER | V
     N8X -> ER | V
     N10X -> ER | N16 | N16X | V
-    N16X -> ER
-    NEXP -> NEXP | N16 | N16X | ER
-    NF -> NF | NEXPX | ER | V
-    NEXPX -> NEXPX | ER | V
+    N16X -> ER | V
+    NEXP -> NEXPX | N16 | N16X | ER
+    NEXPX -> NEXPX | N16 | N16X | ER
+    NF -> NFX | NFEXP | ER
+    NFX -> NFX | ER | V
+    NFEXP -> NFEXPZ | NFEXPX | ER
+    NFEXPZ -> NFEXPZX | ER
+    NFEXPZX -> NFEXPZX | ER | V
     """
 
-    def gc(self):
+    def gc(self) -> str:
+        """
+        Функция для получения одного следующего символа из файла с кодом.
+        Возвращает символ с типом str.
+        """
         return self.get_char()
 
+    def nill(self):
+        """
+        Процедура обнуления текущего стека.
+        """
+        self.stack = ""
+
+    def add(self):
+        """
+        Процедура добавления в стек текущего символа _.
+        """
+        self.stack += self._
+
     def tokenize(self):
-        stack = ""
+        """
+        Основная функция. Выполняет основной цикл определения токена, пока не будет прочитан весь файл.
+        """
+        add = self.add
+        nill = self.nill
+
+        """
+        Текущее состояние автомата. В процессе определения токена состояние меняется.
+        """
         q = "H"
+
+        self.stack = ""
+
+        """
+        Листы для хранения набора токенов, идентификаторов, чисел и ошибок.
+        Токены хранятся в виде (n, k), где n - номер таблицы токенов, k - номер элемента в таблице n.
+        Номера таблиц:
+        1 - ключевые слова
+        2 - разделители
+        3 - идентификаторы
+        4 - переменные
+        
+        Идентификаторы хранятся в виде [x, y, a], где x, y, a - названия идентификаторов. 
+        В таблице токенов содержится ссылка на номер элемента в листе идентификаторов.
+        
+        Числа хранятся в виде ("Type", x), где Type - тип Integer | Float, x - число в 10-ой системе счисления.
+        Все числа переводятся в стандартный вид 10й системы счисления без э.ф..
+        """
         tokens = []
         identificators = []
         numbers = []
+        errors = []
 
         while True:
             _ = self.gc()
-            print(f"stack = {stack}, q = {q}, char = {_}")
+            self._ = _
+            stack = self.stack
+
+            print(f"stack = {stack}\t q = {q}\t char = {_}")
 
             if q == "ER":
                 print("Error.")
-                return [], [], []
+                return [], [], [], errors
 
             if q == "H":
                 if _ == " " or _ == "\n":
                     continue
-                stack += _
+                self.stack += _
                 if _ in self.vocabilary or _ in self.keywords:
                     q = "I"
                     continue
@@ -77,7 +126,7 @@ class Lexer:
                         q = "N2"
                     elif _ in self.numbers[:9]:
                         q = "N8"
-                    elif _ in self.numbers[:10]:
+                    elif _ in self.numbers:
                         q = "N10"
                     continue
 
@@ -88,359 +137,390 @@ class Lexer:
                 elif _ in ["!", "=", ">", "<", "|"]:
                     q = "SS"
                     continue
+
                 elif _ in self.separators:
                     q = "S"
                     continue
+
                 else:
                     q = "ER"
 
             elif q == "I":
                 if _ == " " or _ == "\n":
                     q = "H"
-                    if stack in self.keywords:
-                        tokens.append((1, self.keywords[stack]))
-                        stack = ""
+                    if self.stack in self.keywords:
+                        tokens.append((1, self.keywords[self.stack]))
+                        nill()
+
+                    elif self.stack == "true":
+                        tokens.append((5, 1))
+                        nill()
+
+                    elif self.stack == "false":
+                        tokens.append((5, 0))
+                        nill()
+
                     else:
-                        if not stack in identificators:
-                            identificators.append(stack)
-                        tokens.append((3, identificators.index(stack)))
-                        stack = ""
+                        if not self.stack in identificators:
+                            identificators.append(self.stack)
+                        tokens.append((3, identificators.index(self.stack)))
+                        nill()
+
+                elif _ in self.separators:
+                    q = "H"
+                    if self.stack in self.keywords:
+                        tokens.append((1, self.keywords[self.stack]))
+                        nill()
+
+                    elif self.stack == "true":
+                        tokens.append((5, 1))
+                        nill()
+
+                    elif self.stack == "false":
+                        tokens.append((5, 0))
+                        nill()
+
+                    else:
+                        if not self.stack in identificators:
+                            identificators.append(self.stack)
+                        tokens.append((3, identificators.index(self.stack)))
+                        nill()
+
                 elif _ in self.vocabilary or _ in self.numbers:
-                    stack += _
+                    add()
                     continue
 
                 elif _ == "&":
-                    stack += _
-                    tokens.append((2, self.separators[stack]))
-                    stack = ""
+                    add()
+                    tokens.append((2, self.separators[self.stack]))
+                    nill()
                     q = "H"
-                    continue
 
                 elif _ in self.separators:
-                    q = "S"
-                    if stack in self.keywords:
-                        tokens.append((1, self.keywords[stack]))
-                        stack = ""
+                    if self.stack in self.keywords:
+                        tokens.append((1, self.keywords[self.stack]))
                     else:
-                        if not stack in identificators:
-                            identificators.append(stack)
-                        tokens.append((3, identificators.index(stack)))
-                        stack = ""
-                    stack = _
-                    continue
+                        if not self.stack in identificators:
+                            identificators.append(self.stack)
+                        tokens.append((3, identificators.index(self.stack)))
+                    nill()
+                    add()
+                    q = "S"
 
                 else:
                     q = "ER"
-                    continue
 
             elif q == "S":
                 if _ == " " or _ == "\n":
                     q = "H"
-                    if stack in self.separators:
-                        tokens.append((2, self.separators[stack]))
-                        stack = ""
+                    if self.stack in self.separators:
+                        tokens.append((2, self.separators[self.stack]))
+                        nill()
                     else:
                         q = "ER"
 
                 elif _ in ["!", "=", "<", ">", "&"]:
                     q = "SS"
-                    stack += _
+                    add()
 
                 elif _ == "*":
-                    if stack == "(":
+                    if self.stack == "(":
                         q = "C"
                     continue
 
             elif q == "SS":
                 if _ in ["=", "&", "|"]:
-                    stack += _
-                    if stack in self.separators:
-                        tokens.append((2, self.separators[stack]))
-                        stack = ""
+                    add()
+                    if self.stack in self.separators:
+                        tokens.append((2, self.separators[self.stack]))
+                        nill()
                         q = "H"
-                        continue
                     else:
                         q = "ER"
-                        continue
+
                 elif _ == " " or _ == "\n":
-                    if stack in self.separators:
-                        tokens.append((2, self.separators[stack]))
-                        stack = ""
+                    if self.stack in self.separators:
+                        tokens.append((2, self.separators[self.stack]))
+                        nill()
                         q = "H"
                     else:
                         q = "ER"
-                        stack = ""
-                    continue
+                        nill()
 
             elif q == "C":
-                if _ == ")" and stack[-1] == "*":
+                if _ == ")" and self.stack[-1] == "*":
                     q = "H"
-                    stack = ""
+                    nill()
                     continue
-                stack += _
+                add()
 
             elif q == "N2":
                 if _ in self.numbers[:2]:
-                    stack += _
-                    continue
+                    add()
 
                 elif _ in self.numbers[:9]:
-                    stack += _
+                    add()
                     q = "N8"
 
                 elif _ in self.numbers:
-                    stack += _
+                    add()
                     q = "N10"
 
                 elif _ == ".":
-                    stack += _
+                    add()
                     q = "NF"
 
                 elif _ in ["E", "e"]:
-                    stack += "E"
+                    add()
                     q = "NFE"
 
                 elif _ in ["O", "o"]:
-                    stack += _
+                    add()
                     q = "N8X"
 
                 elif _ in ["D", "d"]:
-                    stack += _
+                    add()
                     q = "N10X"
 
                 elif _ in ["a", "c", "f", "A", "C", "F"]:
-                    stack += _
+                    add()
                     q = "N16"
 
                 elif _ in ["H", "h"]:
-                    stack += _
+                    add()
                     q = "N16X"
 
                 elif _ in ["B", "b"]:
-                    stack += _
+                    add()
                     q = "N2X"
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Integer", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Integer", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Integer", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Integer", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "N2X":
                 if _ in ["a", "c", "d", "e", "f", "A", "C", "D", "E", "F"]:
-                    stack += _
+                    add()
                     q = "N16"
                 elif _ in ["H", "h"]:
-                    stack += _
+                    add()
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
-                    num = int(stack[:-1], 2)
+                    num = int(self.stack[:-1], 2)
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
 
                     tokens.append((4, nid))
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    num = int(stack[:-1], 2)
+                    num = int(self.stack[:-1], 2)
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "N8":
                 if _ in self.numbers[:9]:
-                    stack += _
+                    add()
                     q = "N8"
 
                 elif _ in self.numbers[:10]:
-                    stack += _
+                    add()
                     q = "N10"
 
                 elif _ == ".":
-                    stack += _
+                    add()
                     q = "NF"
 
                 elif _ in ["E", "e"]:
-                    stack += _
+                    add()
                     q = "NEXP"
 
                 elif _ in ["D", "d"]:
-                    stack += _
+                    add()
                     q = "N10X"
 
                 elif _ in ["a", "b", "c", "f", "A", "B", "C", "F"]:
-                    stack += _
+                    add()
                     q = "N16"
 
                 elif _ in ["H", "h"]:
-                    stack += _
+                    add()
                     q = "N16X"
 
                 elif _ in ["O", "o"]:
-                    stack += _
+                    add()
                     q = "N8X"
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Integer", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Integer", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
 
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Integer", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Integer", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "N8X":
                 if _ in [" ", "\n"]:
-                    num = int(stack[:-1], 8)
+                    num = int(self.stack[:-1], 8)
                     nid = self.in_table(num, numbers)
                     if nid is False:
-
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+
                     tokens.append((4, nid))
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    num = int(stack[:-1], 8)
+                    num = int(self.stack[:-1], 8)
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "N10":
                 if _ in self.numbers[:10]:
-                    stack += _
+                    add()
 
                 elif _ == ".":
-                    stack += _
+                    add()
                     q = "NF"
 
                 elif _ in ["E", "e"]:
-                    stack += _
+                    add()
                     q = "NEXP"
 
                 elif _ in ["D", "d"]:
-                    stack += _
+                    add()
                     q = "N10X"
 
                 elif _ in ["a", "b", "c", "f", "A", "B", "C", "F"]:
-                    stack += _
+                    add()
                     q = "N16"
 
                 elif _ in ["H", "h"]:
-                    stack += _
+                    add()
                     q = "N16X"
 
                 elif _ in ["D", "d"]:
-                    stack += _
+                    add()
                     q = "N10X"
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Integer", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Integer", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Integer", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Integer", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                         tokens.append((4, nid))
 
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "N10X":
                 if _ in ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F"]:
-                    stack += _
+                    add()
                     q = "N16"
 
                 elif _ in ["H", "h"]:
-                    stack += _
+                    add()
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
-                    num = stack[:-1]
+                    num = self.stack[:-1]
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    num = stack[:-1]
+                    num = self.stack[:-1]
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "N16":
@@ -458,192 +538,223 @@ class Lexer:
                     "E",
                     "F",
                 ]:
-                    stack += _
+                    add()
 
                 elif _ in ["h", "H"]:
-                    stack += _
+                    add()
                     q = "N16X"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "N16X":
                 if _ in [" ", "\n"]:
-                    num = int(stack[:-1], 16)
-                    nid = self.in_table(stack, numbers)
+                    num = int(self.stack[:-1], 16)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    num = int(stack[:-1], 16)
-                    nid = self.in_table(stack, numbers)
+                    num = int(self.stack[:-1], 16)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "NF":
                 if _ in self.numbers:
-                    stack += _
+                    self.add()
                     q = "NFX"
 
                 else:
-                    stack = ""
+                    self.nill()
                     q = "ER"
 
             elif q == "NFX":
                 if _ in ["E", "e"]:
-                    stack += _
+                    self.add()
                     q = "NFEXP"
-                    continue
 
                 elif _ in self.numbers:
-                    stack += _
-                    continue
+                    self.add()
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Float", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Float", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
 
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(stack, numbers)
+                    nid = self.in_table(self.stack, numbers)
                     if nid is False:
-                        numbers.append(("Float", stack))
-                        nid = self.in_table(stack, numbers)
+                        numbers.append(("Float", self.stack))
+                        nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
 
-                    stack = _
+                    self.nill()
                     q = "S"
 
                 else:
-                    stack = ""
+                    self.nill()
                     q = "ER"
 
             elif q == "NFEXP":
+                add()
                 if _ in ["+", "-"]:
-                    stack += _
                     q = "NFEXPZ"
 
                 elif _ in self.numbers:
-                    stack += _
                     q = "NFEXPX"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "NFEXPZ":
                 if _ in self.numbers:
-                    stack += _
+                    add()
                     q = "NFEXPX"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "NFEXPX":
                 if _ in self.numbers:
-                    stack += _
-                    continue
+                    add()
 
                 elif _ in [" ", "\n"]:
-                    num = self.fexp_to_float(stack)
+                    num = self.fexp_to_float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Float", num))
                     nid = self.in_table(num, numbers)
 
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    num = self.fexp_to_float(stack)
+                    num = self.fexp_to_float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Float", num))
                     nid = self.in_table(num, numbers)
 
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
             elif q == "NEXP":
+                add()
                 if _ in self.numbers:
-                    stack += _
                     q = "NEXPX"
 
                 elif _ in ["+", "-"]:
-                    stack += _
                     q = "NEXPZ"
 
                 elif _ in ["a", "b", "c", "d", "f", "A", "B", "C", "D", "F"]:
-                    stack += _
                     q = "N16"
 
                 elif _ in ["H", "h"]:
-                    stack += _
                     q = "N16X"
 
                 else:
-                    stack = ""
+                    nill()
                     q = "ER"
 
             elif q == "NEXPX":
                 if _ in self.numbers:
-                    stack += _
+                    add()
                     continue
 
                 elif _ in ["a", "b", "c", "d", "f", "A", "B", "C", "D", "F"]:
-                    stack += _
+                    add()
                     q = "N16"
 
                 elif _ in ["H", "h"]:
-                    stack += _
+                    add()
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
-                    num = self.fexp_to_float(stack)
+                    num = self.fexp_to_float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Float", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
-                    stack = ""
+                    nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    num = self.fexp_to_float(stack)
+                    num = self.fexp_to_float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Float", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
-                    stack = _
+                    nill()
+                    add()
                     q = "S"
 
                 else:
                     stack = ""
                     q = "ER"
 
+            elif q == "NEXPZ":
+                if _ in self.numbers:
+                    add()
+                    q = "NEXPZX"
+                else:
+                    nill()
+                    q = "ER"
+
+            elif q == "NEXPZX":
+                if _ in self.numbers:
+                    add()
+                    continue
+                elif _ in [" ", "\n"]:
+                    num = self.fexp_to_float(self.stack)
+                    nid = self.in_table(num, numbers)
+                    if nid is False:
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
+                    tokens.append((4, nid))
+
+                    nill()
+                    q = "H"
+
+                elif _ in self.separators:
+                    num = self.fexp_to_float(self.stack)
+                    nid = self.in_table(num, numbers)
+                    if nid is False:
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
+                    tokens.append((4, nid))
+
+                    nill()
+                    add()
+                    q = "S"
+
             if not _:
                 break
 
-        return tokens, numbers, identificators
+        return tokens, numbers, identificators, errors

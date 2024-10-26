@@ -1,9 +1,21 @@
 begin
-var dim x, y #;
+
+(* program body *)
+
+var dim x, y # (* integer variable *);
+dim a @; (* float variable *)
+dim b &; (* logical variable *)
+
 x assign 2;
 y assign 2 * x;
 displ y;
-(* sample comment ! *)
-dim a @;
+
 a assign 101.10E+3;
+a assign 2.12e-2;
+
+b assign true;
+
+dim c @;
+c assign 3e+4;
+
 end
