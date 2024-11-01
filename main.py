@@ -1,7 +1,7 @@
 from core.la import Lexer
 import json
 
-lexer = Lexer("test.txt")
+lexer = Lexer("test2.txt")
 
 tokens, numbers, identificators, errors = lexer.tokenize()
 

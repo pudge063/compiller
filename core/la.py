@@ -146,41 +146,42 @@ class Lexer:
                     q = "H"
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
-                        nill()
 
                     elif self.stack == "true":
                         tokens.append((5, 1))
-                        nill()
 
                     elif self.stack == "false":
                         tokens.append((5, 0))
-                        nill()
+
+                    elif self.stack in self.separators:
+                        tokens.append(2, self.separators[self.stack])
 
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
                         tokens.append((3, identificators.index(self.stack)))
-                        nill()
-
+                    nill()
+                        
                 elif _ in self.separators:
-                    q = "H"
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
-                        nill()
 
                     elif self.stack == "true":
                         tokens.append((5, 1))
-                        nill()
 
                     elif self.stack == "false":
                         tokens.append((5, 0))
-                        nill()
+
+                    elif self.stack in self.separators:
+                        tokens.append(2, self.separators[self.stack])
 
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
                         tokens.append((3, identificators.index(self.stack)))
-                        nill()
+                    nill()
+                    add()
+                    q = "S"
 
                 elif _ in self.vocabilary or _ in self.numbers:
                     add()
@@ -314,7 +315,10 @@ class Lexer:
                     q = "ER"
 
             elif q == "N2X":
-                if _ in ["a", "c", "d", "e", "f", "A", "C", "D", "E", "F"]:
+                if (
+                    _ in ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F"]
+                    or _ in self.numbers
+                ):
                     add()
                     q = "N16"
                 elif _ in ["H", "h"]:
@@ -603,8 +607,8 @@ class Lexer:
                         numbers.append(("Float", self.stack))
                         nid = self.in_table(self.stack, numbers)
                     tokens.append((4, nid))
-
-                    self.nill()
+                    nill()
+                    add()
                     q = "S"
 
                 else:
