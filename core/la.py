@@ -161,7 +161,7 @@ class Lexer:
                             identificators.append(self.stack)
                         tokens.append((3, identificators.index(self.stack)))
                     nill()
-                        
+
                 elif _ in self.separators:
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
