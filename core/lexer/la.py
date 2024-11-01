@@ -1,8 +1,8 @@
 class Lexer:
     def __init__(self, file):
-        from core.reader import Reader
-        from core.helpers import Helpers
-        from core.tables import vocabilary, numbers, separators, keywords
+        from core.lexer.reader import Reader
+        from core.lexer.helpers import Helpers
+        from core.lexer.tables import vocabilary, numbers, separators, keywords
 
         reader = Reader(file)
         get_char, close_file = reader.char_reader()
@@ -69,6 +69,19 @@ class Lexer:
         """
         self.stack += self._
 
+    def write_tokens(self, tokens, numbers, identificators, errors):
+        import json
+
+        lexer_output = {
+            "tokens": tokens,
+            "numbers": numbers,
+            "identificators": identificators,
+            "errors": errors,
+        }
+
+        with open("lexer_output.json", "w", encoding="utf-8") as file:
+            json.dump(lexer_output, file, indent=4, ensure_ascii=False)
+
     def tokenize(self):
         """
         Основная функция. Выполняет основной цикл определения токена, пока не будет прочитан весь файл.
@@ -108,10 +121,10 @@ class Lexer:
             self._ = _
             stack = self.stack
 
-            print(f"stack = {stack}\t q = {q}\t char = {_}")
+            # print(f"stack = {stack}\t q = {q}\t char = {_}")
 
             if q == "ER":
-                print("Error.")
+                print("Error lexer.")
                 return [], [], [], errors
 
             if q == "H":
@@ -224,6 +237,15 @@ class Lexer:
                     if self.stack == "(":
                         q = "C"
                     continue
+
+                elif _ in self.separators:
+                    if self.stack in self.separators:
+                        tokens.append((2, self.separators[self.stack]))
+                        nill()
+                        add()
+                    else:
+                        q = "ER"
+                    q = "S"
 
             elif q == "SS":
                 if _ in ["=", "&", "|"]:
@@ -756,5 +778,7 @@ class Lexer:
 
             if not _:
                 break
+
+        self.write_tokens(tokens, numbers, identificators, errors)
 
         return tokens, numbers, identificators, errors

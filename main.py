@@ -1,7 +1,8 @@
-from core.la import Lexer
+from core.lexer.la import Lexer
+from core.parser.syntax_analyzer import Parser
 import json
 
-lexer = Lexer("test2.txt")
+lexer = Lexer("test3.txt")
 
 tokens, numbers, identificators, errors = lexer.tokenize()
 
@@ -10,7 +11,11 @@ print(numbers)
 print(identificators)
 print(errors)
 
-with open("lexer_out.txt", "w") as fw:
-    json.dump(tokens, fw)
-    json.dump(numbers, fw)
-    json.dump(identificators, fw)
+"""
+Парсинг программы (синтаксический анализ).
+"""
+parser = Parser()
+try:
+    parser.parse_program()
+except SyntaxError as e:
+    print(f"Syntax error: {e}")
