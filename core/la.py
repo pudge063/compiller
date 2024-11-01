@@ -29,10 +29,10 @@ class Lexer:
     V - выход = H
     ER - ошибка
 
-    H -> I | N2 | N8 | N10 | NF | S | H | ER
+    H -> I | N2 | N8 | N10 | NF | S | H | C | ER
     I -> I | K | ER
-    S -> C | S | ER
-    C -> V | ER
+    S -> SS | ER
+    C -> S | V | ER
     N2 -> N2 | ER | N8 | N10 | NF | NEXP | N8X | N10X | N16 | N16X | N2X | V
     N8 -> N8 | ER | N10 | NF | NEXP | N10X | N16 | N16X | N8X | V
     N10 -> N10 | ER | NF | NEXP | N10X | N16 | N16X | N10X | V
@@ -117,10 +117,10 @@ class Lexer:
             if q == "H":
                 if _ == " " or _ == "\n":
                     continue
-                self.stack += _
+                add()
                 if _ in self.vocabilary or _ in self.keywords:
                     q = "I"
-                    continue
+
                 elif _ in self.numbers:
                     if _ in self.numbers[:2]:
                         q = "N2"
@@ -128,19 +128,15 @@ class Lexer:
                         q = "N8"
                     elif _ in self.numbers:
                         q = "N10"
-                    continue
 
                 elif _ == ".":
                     q = "NF"
-                    continue
 
                 elif _ in ["!", "=", ">", "<", "|"]:
                     q = "SS"
-                    continue
 
                 elif _ in self.separators:
                     q = "S"
-                    continue
 
                 else:
                     q = "ER"
