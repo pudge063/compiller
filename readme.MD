@@ -1,13 +1,13 @@
-### Compiller
+# Compiller
 
-#### Запуск
+## Запуск
 
-Скачать проект
+- **Скачать проект**
 ```
 git clone https://github.com/pudge063/compiller
 ```
 
-Создать файл с кодом на языке грамматики (пример test.txt)
+- **Создать файл с кодом на языке грамматики (пример test.txt)**
 ```
 begin
 
@@ -32,12 +32,12 @@ c assign 3e+4;
 end
 ```
 
-Запуск компилятора
+- **Запуск компилятора**
 ```
 python main.py -f "test.txt"
 ```
 
-Отладка
+- **Отладка**
 ```
 python main.py -f "test.txt" debug
 ```
