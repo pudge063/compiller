@@ -1,8 +1,10 @@
 class Lexer:
-    def __init__(self, file):
+    def __init__(self, file, debug):
         from core.lexer.reader import Reader
         from core.lexer.helpers import Helpers
         from core.lexer.tables import vocabilary, numbers, separators, keywords
+
+        self.debug = debug
 
         reader = Reader(file)
         get_char, close_file = reader.char_reader()
@@ -121,7 +123,8 @@ class Lexer:
             self._ = _
             stack = self.stack
 
-            print(f"stack = {stack}\t q = {q}\t char = {_}")
+            if self.debug:
+                print(f"stack = {stack}\t q = {q}\t char = {_}")
 
             if q == "ER":
                 print("Error lexer.")
@@ -283,6 +286,13 @@ class Lexer:
                         q = "H"
                     else:
                         q = "ER"
+
+                elif _ == " " or _ == "\n":
+                    tokens.append((2, self.separators[self.stack]))
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+                    nill()
+                    q = "H"
 
                 else:
                     q = "ER"
