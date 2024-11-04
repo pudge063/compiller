@@ -1,8 +1,10 @@
 class Lexer:
-    def __init__(self, file):
-        from core.reader import Reader
-        from core.helpers import Helpers
-        from core.tables import vocabilary, numbers, separators, keywords
+    def __init__(self, file, debug):
+        from core.lexer.reader import Reader
+        from core.lexer.helpers import Helpers
+        from core.lexer.tables import vocabilary, numbers, separators, keywords
+
+        self.debug = debug
 
         reader = Reader(file)
         get_char, close_file = reader.char_reader()
@@ -29,10 +31,10 @@ class Lexer:
     V - выход = H
     ER - ошибка
 
-    H -> I | N2 | N8 | N10 | NF | S | H | ER
+    H -> I | N2 | N8 | N10 | NF | S | H | C | ER
     I -> I | K | ER
-    S -> C | S | ER
-    C -> V | ER
+    S -> SS | ER
+    C -> S | V | ER
     N2 -> N2 | ER | N8 | N10 | NF | NEXP | N8X | N10X | N16 | N16X | N2X | V
     N8 -> N8 | ER | N10 | NF | NEXP | N10X | N16 | N16X | N8X | V
     N10 -> N10 | ER | NF | NEXP | N10X | N16 | N16X | N10X | V
@@ -68,6 +70,19 @@ class Lexer:
         Процедура добавления в стек текущего символа _.
         """
         self.stack += self._
+
+    def write_tokens(self, tokens, numbers, identificators, errors):
+        import json
+
+        lexer_output = {
+            "tokens": tokens,
+            "numbers": numbers,
+            "identificators": identificators,
+            "errors": errors,
+        }
+
+        with open("lexer_output.json", "w", encoding="utf-8") as file:
+            json.dump(lexer_output, file, indent=4, ensure_ascii=False)
 
     def tokenize(self):
         """
@@ -108,19 +123,22 @@ class Lexer:
             self._ = _
             stack = self.stack
 
-            print(f"stack = {stack}\t q = {q}\t char = {_}")
+            if self.debug:
+                print(f"stack = {stack}\t q = {q}\t char = {_}")
 
             if q == "ER":
-                print("Error.")
+                print("Error lexer.")
                 return [], [], [], errors
 
             if q == "H":
                 if _ == " " or _ == "\n":
                     continue
-                self.stack += _
+
+                add()
+
                 if _ in self.vocabilary or _ in self.keywords:
                     q = "I"
-                    continue
+
                 elif _ in self.numbers:
                     if _ in self.numbers[:2]:
                         q = "N2"
@@ -128,63 +146,80 @@ class Lexer:
                         q = "N8"
                     elif _ in self.numbers:
                         q = "N10"
-                    continue
 
                 elif _ == ".":
                     q = "NF"
-                    continue
 
                 elif _ in ["!", "=", ">", "<", "|"]:
                     q = "SS"
-                    continue
 
                 elif _ in self.separators:
                     q = "S"
-                    continue
 
                 else:
                     q = "ER"
 
             elif q == "I":
-                if _ == " " or _ == "\n":
+                if _ == " ":
                     q = "H"
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
-                        nill()
 
                     elif self.stack == "true":
                         tokens.append((5, 1))
-                        nill()
 
                     elif self.stack == "false":
                         tokens.append((5, 0))
-                        nill()
+
+                    elif self.stack in self.separators:
+                        tokens.append(2, self.separators[self.stack])
 
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
                         tokens.append((3, identificators.index(self.stack)))
-                        nill()
+                    nill()
+
+                elif _ == "\n":
+                    if self.stack in self.keywords:
+                        tokens.append((1, self.keywords[self.stack]))
+
+                    elif self.stack == "true":
+                        tokens.append((5, 1))
+
+                    elif self.stack == "false":
+                        tokens.append((5, 0))
+
+                    elif self.stack in self.separators:
+                        tokens.append(2, self.separators[self.stack])
+                    else:
+                        if not self.stack in identificators:
+                            identificators.append(self.stack)
+                        tokens.append((3, identificators.index(self.stack)))
+                    tokens.append((2, self.separators["\n"]))
+                    nill()
+                    q = "H"
 
                 elif _ in self.separators:
-                    q = "H"
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
-                        nill()
 
                     elif self.stack == "true":
                         tokens.append((5, 1))
-                        nill()
 
                     elif self.stack == "false":
                         tokens.append((5, 0))
-                        nill()
+
+                    elif self.stack in self.separators:
+                        tokens.append(2, self.separators[self.stack])
 
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
                         tokens.append((3, identificators.index(self.stack)))
-                        nill()
+                    nill()
+                    add()
+                    q = "S"
 
                 elif _ in self.vocabilary or _ in self.numbers:
                     add()
@@ -212,12 +247,17 @@ class Lexer:
 
             elif q == "S":
                 if _ == " " or _ == "\n":
-                    q = "H"
+
                     if self.stack in self.separators:
                         tokens.append((2, self.separators[self.stack]))
                         nill()
                     else:
                         q = "ER"
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
+                    q = "H"
 
                 elif _ in ["!", "=", "<", ">", "&"]:
                     q = "SS"
@@ -227,6 +267,15 @@ class Lexer:
                     if self.stack == "(":
                         q = "C"
                     continue
+
+                elif _ in self.separators:
+                    if self.stack in self.separators:
+                        tokens.append((2, self.separators[self.stack]))
+                        nill()
+                        add()
+                    else:
+                        q = "ER"
+                    q = "S"
 
             elif q == "SS":
                 if _ in ["=", "&", "|"]:
@@ -239,13 +288,14 @@ class Lexer:
                         q = "ER"
 
                 elif _ == " " or _ == "\n":
-                    if self.stack in self.separators:
-                        tokens.append((2, self.separators[self.stack]))
-                        nill()
-                        q = "H"
-                    else:
-                        q = "ER"
-                        nill()
+                    tokens.append((2, self.separators[self.stack]))
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+                    nill()
+                    q = "H"
+
+                else:
+                    q = "ER"
 
             elif q == "C":
                 if _ == ")" and self.stack[-1] == "*":
@@ -295,12 +345,17 @@ class Lexer:
                     q = "N2X"
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(self.stack, numbers)
+                    num = int(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Integer", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
                     nill()
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     q = "H"
 
                 elif _ in self.separators:
@@ -318,7 +373,10 @@ class Lexer:
                     q = "ER"
 
             elif q == "N2X":
-                if _ in ["a", "c", "d", "e", "f", "A", "C", "D", "E", "F"]:
+                if (
+                    _ in ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F"]
+                    or _ in self.numbers
+                ):
                     add()
                     q = "N16"
                 elif _ in ["H", "h"]:
@@ -334,6 +392,10 @@ class Lexer:
 
                     tokens.append((4, nid))
                     nill()
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     q = "H"
 
                 elif _ in self.separators:
@@ -392,6 +454,10 @@ class Lexer:
                     tokens.append((4, nid))
 
                     nill()
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     q = "H"
 
                 elif _ in self.separators:
@@ -418,6 +484,10 @@ class Lexer:
 
                     tokens.append((4, nid))
                     nill()
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     q = "H"
 
                 elif _ in self.separators:
@@ -464,19 +534,25 @@ class Lexer:
                     q = "N10X"
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(self.stack, numbers)
+                    num = int(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Integer", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
                     nill()
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(self.stack, numbers)
+                    num = int(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Integer", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
                         tokens.append((4, nid))
 
                     nill()
@@ -497,7 +573,7 @@ class Lexer:
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
-                    num = self.stack[:-1]
+                    num = int(self.stack[:-1])
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
@@ -505,10 +581,14 @@ class Lexer:
                     tokens.append((4, nid))
 
                     nill()
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     q = "H"
 
                 elif _ in self.separators:
-                    num = self.stack[:-1]
+                    num = int(self.stack[:-1])
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
@@ -556,6 +636,10 @@ class Lexer:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     nill()
                     q = "H"
 
@@ -566,6 +650,7 @@ class Lexer:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
+
                     nill()
                     add()
                     q = "S"
@@ -592,23 +677,28 @@ class Lexer:
                     self.add()
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(self.stack, numbers)
+                    num = float(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Float", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Float", num))
+                        nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
 
                     nill()
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(self.stack, numbers)
+                    num = float(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Float", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Float", num))
+                        nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
-
-                    self.nill()
+                    nill()
+                    add()
                     q = "S"
 
                 else:
@@ -646,6 +736,9 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Float", num))
                     nid = self.in_table(num, numbers)
+
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
 
                     nill()
                     q = "H"
@@ -700,6 +793,9 @@ class Lexer:
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     nill()
                     q = "H"
 
@@ -739,6 +835,9 @@ class Lexer:
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
+                    if _ == "\n":
+                        tokens.append((2, self.separators["\n"]))
+
                     nill()
                     q = "H"
 
@@ -756,5 +855,7 @@ class Lexer:
 
             if not _:
                 break
+
+        self.write_tokens(tokens, numbers, identificators, errors)
 
         return tokens, numbers, identificators, errors
