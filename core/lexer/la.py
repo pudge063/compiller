@@ -57,18 +57,30 @@ class Lexer:
         Функция для получения одного следующего символа из файла с кодом.
         Возвращает символ с типом str.
         """
+
+        if self.debug:
+            print("Call gc().")
+
         return self.get_char()
 
     def nill(self):
         """
         Процедура обнуления текущего стека.
         """
+
+        if self.debug:
+            print("Call nill().")
+
         self.stack = ""
 
     def add(self):
         """
         Процедура добавления в стек текущего символа _.
         """
+
+        if self.debug:
+            print("Call add().")
+
         self.stack += self._
 
     def write_tokens(self, tokens, numbers, identificators, errors):
@@ -124,7 +136,10 @@ class Lexer:
             stack = self.stack
 
             if self.debug:
-                print(f"stack = {stack}\t q = {q}\t char = {_}")
+                ch = _
+                if _ == "\n":
+                    ch = "\\n"
+                print(f"stack: {stack}# q: {q} char: {ch}")
 
             if q == "ER":
                 print("Error lexer.")
@@ -322,7 +337,7 @@ class Lexer:
 
                 elif _ in ["E", "e"]:
                     add()
-                    q = "NFE"
+                    q = "NFEXP"
 
                 elif _ in ["O", "o"]:
                     add()
@@ -786,10 +801,10 @@ class Lexer:
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
-                    num = self.fexp_to_float(self.stack)
+                    num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Float", num))
+                        numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
@@ -800,10 +815,10 @@ class Lexer:
                     q = "H"
 
                 elif _ in self.separators:
-                    num = self.fexp_to_float(self.stack)
+                    num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Float", num))
+                        numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
                     tokens.append((4, nid))
 
@@ -828,7 +843,7 @@ class Lexer:
                     add()
                     continue
                 elif _ in [" ", "\n"]:
-                    num = self.fexp_to_float(self.stack)
+                    num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
@@ -842,7 +857,7 @@ class Lexer:
                     q = "H"
 
                 elif _ in self.separators:
-                    num = self.fexp_to_float(self.stack)
+                    num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))

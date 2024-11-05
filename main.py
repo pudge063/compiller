@@ -12,16 +12,16 @@ def start_compile(file: str = "test1.txt", debug: str = False):
     print(tokens)
     print(numbers)
     print(identificators)
-    print(errors)
+    # print(errors)
 
     """
     Парсинг программы (синтаксический анализ).
     """
-    # parser = Parser()
-    # try:
-    #     parser.parse_program()
-    # except SyntaxError as e:
-    #     print(f"Syntax error: {e}")
+    parser = Parser()
+    try:
+        parser.parse_program()
+    except SyntaxError as e:
+        print(f"Syntax error: {e}")
 
 
 if __name__ == "__main__":
@@ -47,7 +47,10 @@ if __name__ == "__main__":
         f = arg_dict["-f"] if arg_dict["-f"] else "test1.txt"
         d = True if arg_dict["debug"] else False
 
-        start_compile(f, d)
+        try:
+            start_compile(f, d)
+        except:
+            print(Exception("Syntax error."))
 
         if d:
             print(arg_dict)

@@ -3,8 +3,6 @@ begin
 (* program body *)
 
 var dim x, y # (* integer variable *);
-dim a @; (* float variable *)
-dim b &; (* logical variable *)
 
 x assign 2;
 y assign 2 * x;

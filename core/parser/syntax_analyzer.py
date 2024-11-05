@@ -50,6 +50,15 @@ class Parser:
         self.current_index += 1
         return self.current_token()
 
+    def is_identificator(self):
+        if self.current_token()[0] == 3:
+            return True
+        return False
+
+    def skip_enter(self):
+        if self.current_token() == [2, self.separators["\n"]]:
+            self.next_token()
+
     def parse_program(self):
         """
         Основная функция парсера, запускает парсинг программы.
@@ -59,16 +68,30 @@ class Parser:
 
         <программа>::= begin var <описание> {; <оператор>} end
         """
+        # parsing begin
         if self.current_token() == [1, self.keywords["begin"]]:
+            self.next_token()
+            if self.current_token() == [2, self.separators["\n"]]:
+                self.next_token()
+            else:
+                raise SyntaxError("Excepted \\n after 'begin'.")
 
-            self.parse_initialization()
-
-            self.parse_body()
+            # parsing var
+            if self.current_token() == [1, self.keywords["var"]]:
+                self.next_token()
+                self.parse_initialization()
+            else:
+                raise SyntaxError("Excepted initialization variables.")
 
             self.next_token()
+            self.skip_enter()
+
             if self.current_token() == [1, self.keywords["end"]]:
                 if self.next_token():
-                    raise SyntaxError("Unexcepted token after 'end'.")
+                    if self.next_token() == [2, self.separators["\n"]]:
+                        self.next_token()
+                    if self.current_token():
+                        raise SyntaxError("Unexcepted token after 'end'.")
                 else:
                     print("Program parsed successfully.")
             else:
@@ -77,30 +100,35 @@ class Parser:
             raise SyntaxError("Excepted 'begin'.")
 
     def parse_initialization(self):
-        self.next_token()
-        if self.current_token() == [2, self.separators["\n"]]:
+        """
+        Инициализация переменных для правила:
+        <описание>::= dim <идентификатор> {, <идентификатор> } <тип>
+        """
+
+        if self.current_token() == [1, self.keywords["dim"]]:
             self.next_token()
-        if self.current_token() == [1, self.keywords["var"]]:
-            self.next_token()
-            if self.current_token() == [1, self.keywords["dim"]]:
-                self.parse_initialization_identificators()
-            else:
-                raise SyntaxError("Excepted dim.")
+            self.parse_initialization_identificators()
         else:
-            raise SyntaxError("Excepted initialization variables.")
+            raise SyntaxError("Excepted dim.")
 
     def parse_initialization_identificators(self):
-        self.next_token()
-        if self.current_token()[0] == 3:
+
+        if self.is_identificator():
+
             self.next_token()
+
             if self.current_token() == [2, self.separators[","]]:
+                self.next_token()
                 self.parse_initialization_identificators()
+
             elif self.current_token()[0] == 1 and (
                 self.current_token()[1] == self.keywords["&"]
                 or self.current_token()[1] == self.keywords["@"]
                 or self.current_token()[1] == self.keywords["#"]
             ):
-                pass
+                self.next_token()
+                if self.current_token() == [2, self.separators[";"]]:
+                    print("Parse body.")
             else:
                 raise SyntaxError("Excepted variable type.")
         else:
@@ -131,7 +159,7 @@ class Parser:
 
     def parse_component_operator(self):
         count = 0
-        print(self.current_token())
+        # print(self.current_token())
         while True:
             if self.current_token() == [2, self.separators["]"]]:
                 if count < 1:
