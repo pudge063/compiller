@@ -4,6 +4,7 @@ class Parser:
     выход - заключение о правильности грамматики или сообщения об ошибках.
 
     <программа>::= begin var <описание> {; <оператор>} end
+    <оператор>::= <составной> | <присваивания> | <условный> | <фиксированного_цикла> | <условного_цикла> | <ввода> | <вывода>
     <описание>::= dim <идентификатор> {, <идентификатор> } <тип>
     <тип>::=# | @ | &
     <составной>::=«[» <оператор> { ( : | перевод строки) <оператор>} «]»
@@ -83,7 +84,6 @@ class Parser:
             else:
                 raise SyntaxError("Excepted initialization variables.")
 
-            self.next_token()
             self.skip_enter()
 
             if self.current_token() == [1, self.keywords["end"]]:
@@ -128,60 +128,70 @@ class Parser:
             ):
                 self.next_token()
                 if self.current_token() == [2, self.separators[";"]]:
-                    print("Parse body.")
+                    self.parse_operator()
             else:
                 raise SyntaxError("Excepted variable type.")
         else:
             raise SyntaxError("Excepted identificator.")
 
-    def parse_body(self):
-        while True:
-            self.next_token()
-
     def parse_operator(self):
         self.next_token()
+        self.skip_enter()
+        print("Parse operator", self.current_token())
+
         if self.current_token() == [2, self.separators["["]]:
             self.parse_component_operator()
+
+        elif self.current_token() == [2, self.separators["\n"]]:
+            pass
+
+        elif self.current_token() == [2, self.separators["]"]]:
+            pass
 
         elif self.current_token()[0] == 3:
             self.parse_assign()
 
         elif self.current_token() == [1, self.keywords["if"]]:
             pass
+
         elif self.current_token() == [1, self.keywords["for"]]:
             pass
+
         elif self.current_token() == [1, self.keywords["while"]]:
             pass
+
         elif self.current_token() == [1, self.keywords["enter"]]:
             pass
+
         elif self.current_token() == [1, self.keywords["displ"]]:
             pass
 
+        else:
+            raise SyntaxError("Excepted operator.")
+
     def parse_component_operator(self):
-        count = 0
-        # print(self.current_token())
+        self.skip_enter()
+        print("Parse component operator", self.current_token())
+        self.parse_operator()
+
         while True:
+            self.next_token()
+            print(self.current_token())
+
             if self.current_token() == [2, self.separators["]"]]:
-                if count < 1:
-                    raise SyntaxError("Excepted operators in component operator.")
                 break
-            elif self.current_token() == [2, self.separators[":"]]:
-                self.parse_operator()
-                count += 1
-            else:
+
+            elif self.current_token()[0] == 2 and (
+                self.current_token()[1] in [self.separators[":"], self.separators["\n"]]
+            ):
                 self.parse_operator()
 
     def parse_assign(self):
-        print("assign", self.current_token())
-        if self.current_token()[0] == 3:
+        print("Parse assign operator", self.current_token())
+        self.next_token()
+        if self.current_token() == [1, self.keywords["assign"]]:
             self.next_token()
-            if self.current_token() == [1, self.keywords["assign"]]:
-                self.next_token()
-                if self.current_token()[0] == 4:
-                    self.next_token()
-                else:
-                    raise SyntaxError("Excepted value.")
-            else:
-                raise SyntaxError("Excepted assign keyword.")
+            if not self.current_token()[0] == 4:
+                raise SyntaxError("Excepted value.")
         else:
-            raise SyntaxError("Excepted identificator.")
+            raise SyntaxError("Excepted assign keyword.")

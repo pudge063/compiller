@@ -142,7 +142,6 @@ class Lexer:
                 print(f"stack: {stack}# q: {q} char: {ch}")
 
             if q == "ER":
-                print("Error lexer.")
                 return [], [], [], errors
 
             if q == "H":
@@ -172,6 +171,7 @@ class Lexer:
                     q = "S"
 
                 else:
+                    errors.append("Undefined char.")
                     q = "ER"
 
             elif q == "I":
@@ -258,6 +258,7 @@ class Lexer:
                     q = "S"
 
                 else:
+                    errors.append("Unexcepted char in identificator.")
                     q = "ER"
 
             elif q == "S":
@@ -267,6 +268,7 @@ class Lexer:
                         tokens.append((2, self.separators[self.stack]))
                         nill()
                     else:
+                        errors.append("Undefined separator.")
                         q = "ER"
 
                     if _ == "\n":
@@ -289,6 +291,7 @@ class Lexer:
                         nill()
                         add()
                     else:
+                        errors.append(f"Undefined separator {self.stack}.")
                         q = "ER"
                     q = "S"
 
@@ -300,6 +303,7 @@ class Lexer:
                         nill()
                         q = "H"
                     else:
+                        errors.append(f"Undefined component separator {self.stack}.")
                         q = "ER"
 
                 elif _ == " " or _ == "\n":
@@ -310,6 +314,7 @@ class Lexer:
                     q = "H"
 
                 else:
+                    errors.append(f"Unexcepted char {_} in component separator.")
                     q = "ER"
 
             elif q == "C":
@@ -385,6 +390,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in binary number.")
                     q = "ER"
 
             elif q == "N2X":
@@ -426,6 +432,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in binary number.")
                     q = "ER"
 
             elif q == "N8":
@@ -487,6 +494,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in O-number.")
                     q = "ER"
 
             elif q == "N8X":
@@ -518,6 +526,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in binary number.")
                     q = "ER"
 
             elif q == "N10":
@@ -576,6 +585,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in D-number.")
                     q = "ER"
 
             elif q == "N10X":
@@ -616,6 +626,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in D-number.")
                     q = "ER"
 
             elif q == "N16":
@@ -641,6 +652,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in H-number.")
                     q = "ER"
 
             elif q == "N16X":
@@ -672,6 +684,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in H-number.")
                     q = "ER"
 
             elif q == "NF":
@@ -681,6 +694,7 @@ class Lexer:
 
                 else:
                     self.nill()
+                    errors.append(f"Unexcepted char {_} in float number.")
                     q = "ER"
 
             elif q == "NFX":
@@ -718,6 +732,7 @@ class Lexer:
 
                 else:
                     self.nill()
+                    errors.append(f"Unexcepted char {_} in float number.")
                     q = "ER"
 
             elif q == "NFEXP":
@@ -730,6 +745,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in exp number.")
                     q = "ER"
 
             elif q == "NFEXPZ":
@@ -739,6 +755,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in exp-float number.")
                     q = "ER"
 
             elif q == "NFEXPX":
@@ -769,6 +786,11 @@ class Lexer:
                     add()
                     q = "S"
 
+                else:
+                    nill()
+                    errors.append(f"Unexcepted char {_} in exp-float number.")
+                    q = "ER"
+
             elif q == "NEXP":
                 add()
                 if _ in self.numbers:
@@ -785,6 +807,7 @@ class Lexer:
 
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in exp number.")
                     q = "ER"
 
             elif q == "NEXPX":
@@ -828,6 +851,7 @@ class Lexer:
 
                 else:
                     stack = ""
+                    errors.append(f"Unexcepted char {_} in exp number.")
                     q = "ER"
 
             elif q == "NEXPZ":
@@ -836,6 +860,7 @@ class Lexer:
                     q = "NEXPZX"
                 else:
                     nill()
+                    errors.append(f"Unexcepted char {_} in exp number.")
                     q = "ER"
 
             elif q == "NEXPZX":
@@ -868,7 +893,14 @@ class Lexer:
                     add()
                     q = "S"
 
+                else:
+                    nill()
+                    errors.append(f"Unexcepted char {_} in binary number.")
+                    q = "ER"
+
             if not _:
+                if tokens[-1] == (2, self.separators["\n"]):
+                    tokens.pop(-1)
                 break
 
         self.write_tokens(tokens, numbers, identificators, errors)
