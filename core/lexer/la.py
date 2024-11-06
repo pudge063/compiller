@@ -147,7 +147,6 @@ class Lexer:
             if q == "H":
                 if _ == " " or _ == "\n":
                     continue
-
                 add()
 
                 if _ in self.vocabilary or _ in self.keywords:
@@ -170,9 +169,9 @@ class Lexer:
                 elif _ in self.separators:
                     q = "S"
 
-                else:
-                    errors.append("Undefined char.")
-                    q = "ER"
+                # else:
+                #     errors.append("Undefined char.")
+                # q = "ER"
 
             elif q == "I":
                 if _ == " ":

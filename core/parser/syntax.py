@@ -17,17 +17,10 @@ class Parser:
     """
 
     def __init__(self, debug):
-        from core.helpers import Helpers
-
-        helper = Helpers()
-
-        self.print_red = helper.print_red
-        self.print_cyan = helper.print_cyan
-        self.print_magenta = helper.print_magenta
 
         self.init_tokens()
         self.init_tables()
-
+        self.init_colors()
         self.debug = debug
 
         self.current_index = 0
@@ -49,6 +42,17 @@ class Parser:
         self.keywords = keywords
         self.separators = separators
 
+    def init_colors(self):
+        from core.helpers import Helpers
+
+        helper = Helpers()
+
+        self.print_red = helper.print_red
+        self.print_cyan = helper.print_cyan
+        self.print_magenta = helper.print_magenta
+        self.print_yellow = helper.print_yellow
+        self.print_black = helper.print_black
+
     def current_token(self):
         ct = (
             self.tokens[self.current_index]
@@ -62,7 +66,7 @@ class Parser:
 
     def next_token(self):
         if self.debug:
-            print("Next token.")
+            self.print_black("Next token.")
 
         self.current_index += 1
         return self.current_token()
@@ -74,21 +78,21 @@ class Parser:
 
     def skip_enter(self):
         if self.debug:
-            print("Skip enter.")
+            self.print_black("Skip enter.")
 
         if self.current_token() == [2, self.separators["\n"]]:
             self.next_token()
 
     def parse_begin(self):
         if self.debug:
-            print("Parse 'begin'.")
+            self.print_yellow("Parse 'begin'.")
 
         if not self.current_token() == [1, self.keywords["begin"]]:
             raise SyntaxError("Excepted 'begin'.")
 
     def parse_end(self):
         if self.debug:
-            print("Parse 'end'.")
+            self.print_yellow("Parse 'end'.")
 
         if self.current_token() == [1, self.keywords["end"]]:
             self.next_token()
@@ -96,13 +100,13 @@ class Parser:
             if self.current_token():
                 raise SyntaxError("Unexcepted token after 'end'.")
             else:
-                self.print_magenta("Syntax analyzer OK!\n")
+                self.print_cyan("\nEnd syntax analyzer.\n")
         else:
             raise SyntaxError("Excepted 'end'.")
 
     def parse_var(self):
         if self.debug:
-            print("Parse 'var'.")
+            self.print_yellow("Parse 'var'.")
 
         self.next_token()
         self.skip_enter()
@@ -121,7 +125,7 @@ class Parser:
 
     def parse_identificator(self):
         if self.debug:
-            print("Parse identificator.")
+            self.print_yellow("Parse identificator.")
 
         while True:
             if self.current_token() == [2, self.separators[","]]:
@@ -142,7 +146,7 @@ class Parser:
 
     def parse_operator(self):
         if self.debug:
-            print("Parse operator.")
+            self.print_yellow(f"Parse operator. {self.current_token()}")
 
         if self.current_token() == [2, self.separators["["]]:
             self.next_token()
@@ -157,7 +161,7 @@ class Parser:
 
     def parse_component_operator(self):
         if self.debug:
-            print("Parse component operator.")
+            self.print_yellow("Parse component operator.")
 
         self.parse_operator()
 
@@ -184,7 +188,7 @@ class Parser:
 
     def parse_assign_operator(self):
         if self.debug:
-            print("Parse assign operator.")
+            self.print_yellow(f"Parse assign operator. {self.current_token()}")
 
         if self.current_token() == [1, self.keywords["assign"]]:
             self.next_token()
@@ -197,7 +201,7 @@ class Parser:
 
     def parse_program(self):
         if self.debug:
-            print("Parse program.")
+            self.print_cyan("Start syntax analyzer.\n")
 
         self.parse_begin()
 

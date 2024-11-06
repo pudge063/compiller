@@ -13,23 +13,19 @@ begin
 
 (* program body *)
 
-var dim x, y # (* integer variable *);
-dim a @; (* float variable *)
-dim b &; (* logical variable *)
+var dim x, y @ (* integer variable *);
 
-x assign 2;
-y assign 2 * x;
+x assign 2.0;
+y assign 3.0 * x;
 displ y;
 
-a assign 101.10E+3;
-a assign 2.12e-2;
+x assign 101.10E+3;
+y assign 2.12e-2;
 
-b assign true;
-
-dim c @;
-c assign 3e+4;
+x assign 3e+4;
 
 end
+
 ```
 
 - **Запуск компилятора**

@@ -2,8 +2,9 @@ begin
 
 var dim c, d @;
 
-[ c assign 2.0
-d assign 3.1 ]
+[ c assign 2.0 : a assign 2.2
+d assign 3.1 ];
 
+e assign 2
 
-1end
+end
