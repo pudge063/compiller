@@ -76,6 +76,16 @@ class Parser:
             return True
         return False
 
+    def is_bool(self):
+        if self.current_token()[0] == 5:
+            return True
+        return False
+
+    def is_number(self):
+        if self.current_token()[0] == 4:
+            return True
+        return False
+
     def skip_enter(self):
         if self.debug:
             self.print_black("Skip enter.")
@@ -156,6 +166,21 @@ class Parser:
             self.next_token()
             self.parse_assign_operator()
 
+        elif self.current_token() == [1, self.keywords["if"]]:
+            pass
+
+        elif self.current_token() == [1, self.keywords["for"]]:
+            pass
+
+        elif self.current_token() == [1, self.keywords["while"]]:
+            pass
+
+        elif self.current_token() == [1, self.keywords["enter"]]:
+            pass
+
+        elif self.current_token() == [1, self.keywords["displ"]]:
+            pass
+
         else:
             raise SyntaxError("Excepted operator.")
 
@@ -192,12 +217,50 @@ class Parser:
 
         if self.current_token() == [1, self.keywords["assign"]]:
             self.next_token()
-            if self.current_token()[0] == 4:
-                self.next_token()
-            else:
-                raise SyntaxError("Excepted value to assign.")
+            self.parse_factor()
+            # if self.current_token()[0] == 4:
+            #     self.next_token()
+
+            # else:
+            #     raise SyntaxError("Excepted value to assign.")
         else:
             raise SyntaxError("Excepted assign operator.")
+
+    def parse_factor(self):
+        if self.debug:
+            self.print_yellow(f"Parse_factor. {self.current_token()}")
+
+        if self.is_identificator():
+            self.next_token()
+
+        elif self.is_number():
+            self.next_token()
+
+        elif self.is_bool():
+            pass
+
+        elif self.current_token() == [2, "!"]:
+            self.next_token()
+            self.parse_factor()
+
+        elif self.current_token() == [2, "("]:
+            self.next_token()
+            self.parse_expression()
+            self.next_token()
+            if self.current_token() == [2, ")"]:
+                pass
+
+        else:
+            raise SyntaxError("Excepted factor.")
+
+    def parse_term(self):
+        self.parse_factor()
+        self.next_token()
+        if self.current_token()[0] == 2 and (self.current_token()[1] in ["*", "/"]):
+            self.parse_factor()
+
+    def parse_expression(self):
+        pass
 
     def parse_program(self):
         if self.debug:
@@ -208,6 +271,11 @@ class Parser:
         self.parse_var()
 
         while True:
+            if self.debug:
+                self.print_yellow(
+                    f"Parse operator in program block. {self.current_token()}"
+                )
+
             if self.current_token() == [2, self.separators[";"]]:
                 self.next_token()
                 self.skip_enter()

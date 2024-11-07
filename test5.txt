@@ -1,10 +1,11 @@
 begin
 
+(* comment *)
+
+
 var dim c, d @;
-
-[ c assign 2.0 : a assign 2.2
-d assign 3.1 ];
-
+[ a assign 2
+b assign c ];
 e assign 2
 
 end

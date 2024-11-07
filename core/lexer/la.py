@@ -4,6 +4,8 @@ class Lexer:
         from core.lexer.helpers import Helpers
         from core.lexer.tables import vocabilary, numbers, separators, keywords
 
+        self.init_colors()
+
         self.debug = debug
 
         reader = Reader(file)
@@ -52,6 +54,16 @@ class Lexer:
     NFEXPZX -> NFEXPZX | ER | V
     """
 
+    def init_colors(self):
+        from core.helpers import Helpers
+
+        helper = Helpers()
+        self.print_black = helper.print_black
+        self.print_cyan = helper.print_cyan
+        self.print_red = helper.print_red
+        self.print_magenta = helper.print_magenta
+        self.print_yellow = helper.print_yellow
+
     def gc(self) -> str:
         """
         Функция для получения одного следующего символа из файла с кодом.
@@ -59,7 +71,7 @@ class Lexer:
         """
 
         if self.debug:
-            print("Call gc().")
+            self.print_black("Call gc().")
 
         return self.get_char()
 
@@ -69,7 +81,7 @@ class Lexer:
         """
 
         if self.debug:
-            print("Call nill().")
+            self.print_black("Call nill().")
 
         self.stack = ""
 
@@ -79,7 +91,7 @@ class Lexer:
         """
 
         if self.debug:
-            print("Call add().")
+            self.print_black("Call add().")
 
         self.stack += self._
 
@@ -139,100 +151,192 @@ class Lexer:
                 ch = _
                 if _ == "\n":
                     ch = "\\n"
-                print(f"stack: {stack}# q: {q} char: {ch}")
+                self.print_black(f"stack: {stack}# q: {q} char: {ch}")
 
             if q == "ER":
                 return [], [], [], errors
 
             if q == "H":
                 if _ == " " or _ == "\n":
+                    if _ == "\n" and tokens[-1] != (2, self.separators["\n"]):
+                        tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(f"token '\\n' -> (2, {self.separators["\n"]})")
+                            
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
                     continue
                 add()
 
                 if _ in self.vocabilary or _ in self.keywords:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> I")
                     q = "I"
 
                 elif _ in self.numbers:
                     if _ in self.numbers[:2]:
+                        if self.debug:
+                            self.print_yellow(f"q: {q} -> N2")
                         q = "N2"
+
                     elif _ in self.numbers[:9]:
+                        if self.debug:
+                            self.print_yellow(f"q: {q} -> N8")
                         q = "N8"
+
                     elif _ in self.numbers:
+                        if self.debug:
+                            self.print_yellow(f"q: {q} -> N10")
                         q = "N10"
 
                 elif _ == ".":
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
                 elif _ in ["!", "=", ">", "<", "|"]:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> SS")
                     q = "SS"
 
                 elif _ in self.separators:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
-
-                # else:
-                #     errors.append("Undefined char.")
-                # q = "ER"
 
             elif q == "I":
                 if _ == " ":
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
+
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (1, {self.keywords[self.stack]})"
+                            )
 
                     elif self.stack == "true":
                         tokens.append((5, 1))
+                        if self.debug:
+                            self.print_yellow(f"token '{self.stack}' -> (5, 1)")
 
                     elif self.stack == "false":
                         tokens.append((5, 0))
+                        if self.debug:
+                            self.print_yellow(f"token '{self.stack}' -> (5, 0)")
 
                     elif self.stack in self.separators:
                         tokens.append(2, self.separators[self.stack])
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
 
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
+                            if self.debug:
+                                self.print_yellow(
+                                    f"identificator '{self.stack}' -> (3, {self.stack})"
+                                )
                         tokens.append((3, identificators.index(self.stack)))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (3, {self.stack})"
+                            )
                     nill()
 
                 elif _ == "\n":
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (1, {self.keywords[self.stack]})"
+                            )
 
                     elif self.stack == "true":
                         tokens.append((5, 1))
+                        if self.debug:
+                            self.print_yellow(f"token '{self.stack}' -> (5, 1)")
 
                     elif self.stack == "false":
                         tokens.append((5, 0))
+                        if self.debug:
+                            self.print_yellow(f"token '{self.stack}' -> (5, 0)")
 
                     elif self.stack in self.separators:
                         tokens.append(2, self.separators[self.stack])
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
+                            if self.debug:
+                                self.print_yellow(
+                                    f"identificator '{self.stack}' -> (3, {self.stack})"
+                                )
+
                         tokens.append((3, identificators.index(self.stack)))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (3, {self.stack})"
+                            )
+
                     tokens.append((2, self.separators["\n"]))
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (1, {self.keywords[self.stack]})"
+                            )
 
                     elif self.stack == "true":
                         tokens.append((5, 1))
+                        if self.debug:
+                            self.print_yellow(f"token '{self.stack}' -> (5, 1)")
 
                     elif self.stack == "false":
                         tokens.append((5, 0))
+                        if self.debug:
+                            self.print_yellow(f"token '{self.stack}' -> (5, 0)")
 
                     elif self.stack in self.separators:
                         tokens.append(2, self.separators[self.stack])
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
 
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
+                            if self.debug:
+                                self.print_yellow(
+                                    f"identificator '{self.stack}' -> (3, {self.stack})"
+                                )
                         tokens.append((3, identificators.index(self.stack)))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (3, {self.stack})"
+                            )
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 elif _ in self.vocabilary or _ in self.numbers:
@@ -242,18 +346,42 @@ class Lexer:
                 elif _ == "&":
                     add()
                     tokens.append((2, self.separators[self.stack]))
+                    if self.debug:
+                        self.print_yellow(
+                            f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                        )
+
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (1, {self.keywords[self.stack]})"
+                            )
                     else:
                         if not self.stack in identificators:
                             identificators.append(self.stack)
+                            if self.debug:
+                                self.print_yellow(
+                                    f"identificator '{self.stack}' -> (3, {self.stack})"
+                                )
                         tokens.append((3, identificators.index(self.stack)))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (3, {self.stack})"
+                            )
+
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -265,33 +393,60 @@ class Lexer:
 
                     if self.stack in self.separators:
                         tokens.append((2, self.separators[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
                         nill()
+
                     else:
                         errors.append("Undefined separator.")
                         q = "ER"
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in ["!", "=", "<", ">", "&"]:
-                    q = "SS"
                     add()
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> SS")
+                    q = "SS"
+
                 elif _ == "*":
+                    if self.debug:
+                        self.print_yellow("Look comment...")
+
                     if self.stack == "(":
+                        if self.debug:
+                            self.print_yellow(f"q: {q} -> C")
                         q = "C"
                     continue
 
                 elif _ in self.separators:
                     if self.stack in self.separators:
                         tokens.append((2, self.separators[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
+
                         nill()
                         add()
                     else:
                         errors.append(f"Undefined separator {self.stack}.")
                         q = "ER"
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
             elif q == "SS":
@@ -299,7 +454,15 @@ class Lexer:
                     add()
                     if self.stack in self.separators:
                         tokens.append((2, self.separators[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
+
                         nill()
+
+                        if self.debug:
+                            self.print_yellow(f"q: {q} -> H")
                         q = "H"
                     else:
                         errors.append(f"Undefined component separator {self.stack}.")
@@ -307,9 +470,22 @@ class Lexer:
 
                 elif _ == " " or _ == "\n":
                     tokens.append((2, self.separators[self.stack]))
+                    if self.debug:
+                        self.print_yellow(
+                            f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                        )
+
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
+
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 else:
@@ -317,10 +493,18 @@ class Lexer:
                     q = "ER"
 
             elif q == "C":
+                if self.debug:
+                    self.print_yellow("... comment ...")
+
                 if _ == ")" and self.stack[-1] == "*":
-                    q = "H"
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
+                    q = "H"
+
                     continue
+
                 add()
 
             elif q == "N2":
@@ -329,38 +513,65 @@ class Lexer:
 
                 elif _ in self.numbers[:9]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N8")
                     q = "N8"
 
                 elif _ in self.numbers:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N10")
                     q = "N10"
 
                 elif _ == ".":
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
                 elif _ in ["E", "e"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NFEXP")
                     q = "NFEXP"
 
                 elif _ in ["O", "o"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N8X")
                     q = "N8X"
 
                 elif _ in ["D", "d"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N10X")
                     q = "N10X"
 
                 elif _ in ["a", "c", "f", "A", "C", "F"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
                 elif _ in ["H", "h"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 elif _ in ["B", "b"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N2X")
                     q = "N2X"
 
                 elif _ in [" ", "\n"]:
@@ -369,22 +580,44 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                    if self.debug:
+                        self.print_yellow(f"numbers '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{self.stack}' -> (4, {nid})")
+
                     nill()
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(self.stack, numbers)
+                    num = int(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Integer", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"numbers '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"tokens '{num}' -> (4, {nid})")
+
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -398,9 +631,16 @@ class Lexer:
                     or _ in self.numbers
                 ):
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
+
                 elif _ in ["H", "h"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
@@ -409,13 +649,24 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"numbers '{num}' -> (4, {nid})")
 
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"tokens '{num}' -> (4, {nid})")
+
                     nill()
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"tokens '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -424,9 +675,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"numbers '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"tokens '{num}' -> (4, {nid})")
+
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -437,58 +697,104 @@ class Lexer:
             elif q == "N8":
                 if _ in self.numbers[:9]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N8")
                     q = "N8"
 
                 elif _ in self.numbers[:10]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N10")
                     q = "N10"
 
                 elif _ == ".":
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
                 elif _ in ["E", "e"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NEXP")
                     q = "NEXP"
 
                 elif _ in ["D", "d"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N10x")
                     q = "N10X"
 
                 elif _ in ["a", "b", "c", "f", "A", "B", "C", "F"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
                 elif _ in ["H", "h"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 elif _ in ["O", "o"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N8X")
                     q = "N8X"
 
                 elif _ in [" ", "\n"]:
-                    nid = self.in_table(self.stack, numbers)
+                    num = int(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Integer", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"numbers '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"tokens '{num}' -> (4, {nid})")
 
                     nill()
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"tokens '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
-                    nid = self.in_table(self.stack, numbers)
+                    num = int(self.stack)
+                    nid = self.in_table(num, numbers)
                     if nid is False:
-                        numbers.append(("Integer", self.stack))
-                        nid = self.in_table(self.stack, numbers)
+                        numbers.append(("Integer", num))
+                        nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"numbers '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"numbers '{num}' -> (4, {nid})")
+
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -503,13 +809,24 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
 
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
+
                     nill()
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -518,9 +835,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
+
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -534,26 +860,44 @@ class Lexer:
 
                 elif _ == ".":
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
                 elif _ in ["E", "e"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NEXP")
                     q = "NEXP"
 
                 elif _ in ["D", "d"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N10X")
                     q = "N10X"
 
                 elif _ in ["a", "b", "c", "f", "A", "B", "C", "F"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
                 elif _ in ["H", "h"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 elif _ in ["D", "d"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N10X")
                     q = "N10X"
 
                 elif _ in [" ", "\n"]:
@@ -562,12 +906,24 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
+
                     nill()
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -576,10 +932,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
-                        tokens.append((4, nid))
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
+                    tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -590,10 +954,16 @@ class Lexer:
             elif q == "N10X":
                 if _ in ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
                 elif _ in ["H", "h"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
@@ -602,13 +972,24 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     nill()
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -617,10 +998,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -647,6 +1036,9 @@ class Lexer:
 
                 elif _ in ["h", "H"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 else:
@@ -661,12 +1053,23 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -675,10 +1078,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -689,6 +1100,9 @@ class Lexer:
             elif q == "NF":
                 if _ in self.numbers:
                     self.add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NFX")
                     q = "NFX"
 
                 else:
@@ -699,6 +1113,9 @@ class Lexer:
             elif q == "NFX":
                 if _ in ["E", "e"]:
                     self.add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NFEXP")
                     q = "NFEXP"
 
                 elif _ in self.numbers:
@@ -710,12 +1127,24 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Float", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -724,9 +1153,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Float", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
+
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -736,10 +1174,15 @@ class Lexer:
 
             elif q == "NFEXP":
                 add()
+
                 if _ in ["+", "-"]:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NFEXPZ")
                     q = "NFEXPZ"
 
                 elif _ in self.numbers:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NFEXPX")
                     q = "NFEXPX"
 
                 else:
@@ -750,6 +1193,9 @@ class Lexer:
             elif q == "NFEXPZ":
                 if _ in self.numbers:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NFXPX")
                     q = "NFEXPX"
 
                 else:
@@ -766,12 +1212,25 @@ class Lexer:
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Float", num))
-                    nid = self.in_table(num, numbers)
+                        nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
+                    tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -779,10 +1238,19 @@ class Lexer:
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Float", num))
-                    nid = self.in_table(num, numbers)
+                        nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
+                    tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -792,16 +1260,25 @@ class Lexer:
 
             elif q == "NEXP":
                 add()
+
                 if _ in self.numbers:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NEXPX")
                     q = "NEXPX"
 
                 elif _ in ["+", "-"]:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NEXPZ")
                     q = "NEXPZ"
 
                 elif _ in ["a", "b", "c", "d", "f", "A", "B", "C", "D", "F"]:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
                 elif _ in ["H", "h"]:
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 else:
@@ -816,10 +1293,16 @@ class Lexer:
 
                 elif _ in ["a", "b", "c", "d", "f", "A", "B", "C", "D", "F"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
                 elif _ in ["H", "h"]:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 elif _ in [" ", "\n"]:
@@ -828,12 +1311,24 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -842,10 +1337,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
@@ -856,7 +1359,11 @@ class Lexer:
             elif q == "NEXPZ":
                 if _ in self.numbers:
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> NEXPZX")
                     q = "NEXPZX"
+
                 else:
                     nill()
                     errors.append(f"Unexcepted char {_} in exp number.")
@@ -866,18 +1373,31 @@ class Lexer:
                 if _ in self.numbers:
                     add()
                     continue
+
                 elif _ in [" ", "\n"]:
                     num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     if _ == "\n":
                         tokens.append((2, self.separators["\n"]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
 
                     nill()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
                 elif _ in self.separators:
@@ -886,10 +1406,18 @@ class Lexer:
                     if nid is False:
                         numbers.append(("Integer", num))
                         nid = self.in_table(num, numbers)
+                        if self.debug:
+                            self.print_yellow(f"number '{num}' -> (4, {nid})")
+
                     tokens.append((4, nid))
+                    if self.debug:
+                        self.print_yellow(f"token '{num}' -> (4, {nid})")
 
                     nill()
                     add()
+
+                    if self.debug:
+                        self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
                 else:
