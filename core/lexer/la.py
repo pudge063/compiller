@@ -161,8 +161,10 @@ class Lexer:
                     if _ == "\n" and tokens[-1] != (2, self.separators["\n"]):
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
-                            self.print_yellow(f"token '\\n' -> (2, {self.separators["\n"]})")
-                            
+                            self.print_yellow(
+                                f"token '\\n' -> (2, {self.separators["\n"]})"
+                            )
+
                         if self.debug:
                             self.print_yellow(
                                 f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
@@ -448,6 +450,15 @@ class Lexer:
                     if self.debug:
                         self.print_yellow(f"q: {q} -> S")
                     q = "S"
+
+                else:
+                    if self.stack in self.separators:
+                        tokens.append((2, self.separators[self.stack]))
+                        if self.debug:
+                            self.print_yellow(
+                                f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
+                            )
+                        nill()
 
             elif q == "SS":
                 if _ in ["=", "&", "|"]:

@@ -7,6 +7,18 @@
 git clone https://github.com/pudge063/compiller
 ```
 
+- **Установить виртуальное окружение**
+```
+cd compiler
+python3 -m venv venv
+source /venv/bin/activate
+```
+
+- **Установка зависимостей**
+```
+pip install -r requirements.txt
+```
+
 - **Создать файл с кодом на языке грамматики (пример test.txt)**
 ```
 begin

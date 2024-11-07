@@ -1,0 +1,12 @@
+begin
+var dim x, y #;
+
+x assign 5;
+
+y assign 10
+
+(*
+a assign ( 3 + 2 )
+*)
+
+end
