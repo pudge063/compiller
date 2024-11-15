@@ -33,3 +33,23 @@ class Debug:
     def add_number(self, stack, token_id):
         if self.debug_state:
             self.print_yellow(f"numbers {stack} => (4, {token_id})")
+
+    def look_comment(self):
+        if self.debug_state:
+            self.print_yellow("Look comment...")
+
+    def skip_comment(self):
+        if self.debug_state:
+            self.print_yellow("... comment ...")
+
+    def use_gc(self):
+        if self.debug_state:
+            self.print_black("use gc.")
+
+    def use_add(self):
+        if self.debug_state:
+            self.print_black("use add.")
+
+    def use_nill(self):
+        if self.debug_state:
+            self.print_black("use nill.")

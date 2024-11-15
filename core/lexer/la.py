@@ -6,7 +6,6 @@ class Lexer:
 
         self.debug = debug
 
-        self.init_colors()
         self.init_debug()
 
         reader = Reader(file)
@@ -23,16 +22,6 @@ class Lexer:
         self.separators = separators
         self.keywords = keywords
 
-    def init_colors(self):
-        from core.helpers import Helpers
-
-        helper = Helpers()
-        self.print_black = helper.print_black
-        self.print_cyan = helper.print_cyan
-        self.print_red = helper.print_red
-        self.print_magenta = helper.print_magenta
-        self.print_yellow = helper.print_yellow
-
     def init_debug(self):
         from core.lexer.l_debug import Debug
 
@@ -43,20 +32,23 @@ class Lexer:
         self.add_token = debugger.add_token
         self.add_identificator = debugger.add_identificator
         self.add_number = debugger.add_number
+        self.look_comment = debugger.look_comment
+        self.skip_comment = debugger.skip_comment
+
+        self.use_nill = debugger.use_nill
+        self.use_add = debugger.use_add
+        self.use_gc = debugger.use_gc
 
     def gc(self) -> str:
-        if self.debug:
-            self.print_black("Call gc().")
+        self.use_gc()
         return self.get_char()
 
     def nill(self):
-        if self.debug:
-            self.print_black("Call nill().")
+        self.use_nill()
         self.stack = ""
 
     def add(self):
-        if self.debug:
-            self.print_black("Call add().")
+        self.use_add()
         self.stack += self.chr
 
     def write_tokens(self, tokens, numbers, identificators, errors):
@@ -281,13 +273,9 @@ class Lexer:
                     q = self.change_state(q, "SS")
 
                 elif chr == "*":
-                    # TODO: вынести в debug
-                    if self.debug:
-                        self.print_yellow("Look comment...")
-
+                    self.look_comment()
                     if self.stack == "(":
                         q = self.change_state(q, "C")
-                    continue
 
                 elif chr in self.separators:
                     if self.stack in self.separators:
@@ -296,11 +284,11 @@ class Lexer:
 
                         nill()
                         add()
+                        q = self.change_state(q, "S")
+
                     else:
                         errors.append(f"Undefined separator {self.stack}.")
                         q = "ER"
-
-                    q = self.change_state(q, "S")
 
                 else:
                     if self.stack in self.separators:
@@ -339,15 +327,11 @@ class Lexer:
                     q = "ER"
 
             elif q == "C":
-                # TODO: вынести в debug
-                if self.debug:
-                    self.print_yellow("... comment ...")
-
+                self.skip_comment()
                 if chr == ")" and self.stack[-1] == "*":
                     nill()
                     q = self.change_state(q, "H")
                     continue
-
                 add()
 
             elif q == "N2":
