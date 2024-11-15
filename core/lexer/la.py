@@ -93,7 +93,7 @@ class Lexer:
         if self.debug:
             self.print_black("Call add().")
 
-        self.stack += self._
+        self.stack += self.chr
 
     def write_tokens(self, tokens, numbers, identificators, errors):
         import json
@@ -143,13 +143,13 @@ class Lexer:
         errors = []
 
         while True:
-            _ = self.gc()
-            self._ = _
+            chr = self.gc()
+            self.chr = chr
             stack = self.stack
 
             if self.debug:
-                ch = _
-                if _ == "\n":
+                ch = chr
+                if chr == "\n":
                     ch = "\\n"
                 self.print_black(f"stack: {stack}# q: {q} char: {ch}")
 
@@ -157,8 +157,8 @@ class Lexer:
                 return [], [], [], errors
 
             if q == "H":
-                if _ == " " or _ == "\n":
-                    if _ == "\n" and tokens[-1] != (2, self.separators["\n"]):
+                if chr == " " or chr == "\n":
+                    if chr == "\n" and tokens[-1] != (2, self.separators["\n"]):
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -172,44 +172,44 @@ class Lexer:
                     continue
                 add()
 
-                if _ in self.vocabilary or _ in self.keywords:
+                if chr in self.vocabilary or chr in self.keywords:
                     if self.debug:
                         self.print_yellow(f"q: {q} -> I")
                     q = "I"
 
-                elif _ in self.numbers:
-                    if _ in self.numbers[:2]:
+                elif chr in self.numbers:
+                    if chr in self.numbers[:2]:
                         if self.debug:
                             self.print_yellow(f"q: {q} -> N2")
                         q = "N2"
 
-                    elif _ in self.numbers[:9]:
+                    elif chr in self.numbers[:9]:
                         if self.debug:
                             self.print_yellow(f"q: {q} -> N8")
                         q = "N8"
 
-                    elif _ in self.numbers:
+                    elif chr in self.numbers:
                         if self.debug:
                             self.print_yellow(f"q: {q} -> N10")
                         q = "N10"
 
-                elif _ == ".":
+                elif chr == ".":
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
-                elif _ in ["!", "=", ">", "<", "|"]:
+                elif chr in ["!", "=", ">", "<", "|"]:
                     if self.debug:
                         self.print_yellow(f"q: {q} -> SS")
                     q = "SS"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     if self.debug:
                         self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
             elif q == "I":
-                if _ == " ":
+                if chr == " ":
                     if self.debug:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
@@ -252,7 +252,7 @@ class Lexer:
                             )
                     nill()
 
-                elif _ == "\n":
+                elif chr == "\n":
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
                         if self.debug:
@@ -297,7 +297,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
                         if self.debug:
@@ -341,11 +341,11 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> S")
                     q = "S"
 
-                elif _ in self.vocabilary or _ in self.numbers:
+                elif chr in self.vocabilary or chr in self.numbers:
                     add()
                     continue
 
-                elif _ == "&":
+                elif chr == "&":
                     add()
                     tokens.append((2, self.separators[self.stack]))
                     if self.debug:
@@ -359,7 +359,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     if self.stack in self.keywords:
                         tokens.append((1, self.keywords[self.stack]))
                         if self.debug:
@@ -391,7 +391,7 @@ class Lexer:
                     q = "ER"
 
             elif q == "S":
-                if _ == " " or _ == "\n":
+                if chr == " " or chr == "\n":
 
                     if self.stack in self.separators:
                         tokens.append((2, self.separators[self.stack]))
@@ -405,7 +405,7 @@ class Lexer:
                         errors.append("Undefined separator.")
                         q = "ER"
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -416,14 +416,14 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in ["!", "=", "<", ">", "&"]:
+                elif chr in ["!", "=", "<", ">", "&"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> SS")
                     q = "SS"
 
-                elif _ == "*":
+                elif chr == "*":
                     if self.debug:
                         self.print_yellow("Look comment...")
 
@@ -433,7 +433,7 @@ class Lexer:
                         q = "C"
                     continue
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     if self.stack in self.separators:
                         tokens.append((2, self.separators[self.stack]))
                         if self.debug:
@@ -461,7 +461,7 @@ class Lexer:
                         nill()
 
             elif q == "SS":
-                if _ in ["=", "&", "|"]:
+                if chr in ["=", "&", "|"]:
                     add()
                     if self.stack in self.separators:
                         tokens.append((2, self.separators[self.stack]))
@@ -479,14 +479,14 @@ class Lexer:
                         errors.append(f"Undefined component separator {self.stack}.")
                         q = "ER"
 
-                elif _ == " " or _ == "\n":
+                elif chr == " " or chr == "\n":
                     tokens.append((2, self.separators[self.stack]))
                     if self.debug:
                         self.print_yellow(
                             f"token '{self.stack}' -> (2, {self.separators[self.stack]})"
                         )
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -500,14 +500,14 @@ class Lexer:
                     q = "H"
 
                 else:
-                    errors.append(f"Unexcepted char {_} in component separator.")
+                    errors.append(f"Unexcepted char {chr} in component separator.")
                     q = "ER"
 
             elif q == "C":
                 if self.debug:
                     self.print_yellow("... comment ...")
 
-                if _ == ")" and self.stack[-1] == "*":
+                if chr == ")" and self.stack[-1] == "*":
                     nill()
 
                     if self.debug:
@@ -519,73 +519,73 @@ class Lexer:
                 add()
 
             elif q == "N2":
-                if _ in self.numbers[:2]:
+                if chr in self.numbers[:2]:
                     add()
 
-                elif _ in self.numbers[:9]:
+                elif chr in self.numbers[:9]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N8")
                     q = "N8"
 
-                elif _ in self.numbers:
+                elif chr in self.numbers:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N10")
                     q = "N10"
 
-                elif _ == ".":
+                elif chr == ".":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
-                elif _ in ["E", "e"]:
+                elif chr in ["E", "e"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NFEXP")
                     q = "NFEXP"
 
-                elif _ in ["O", "o"]:
+                elif chr in ["O", "o"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N8X")
                     q = "N8X"
 
-                elif _ in ["D", "d"]:
+                elif chr in ["D", "d"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N10X")
                     q = "N10X"
 
-                elif _ in ["a", "c", "f", "A", "C", "F"]:
+                elif chr in "acfACF":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
-                elif _ in ["H", "h"]:
+                elif chr in ["H", "h"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
-                elif _ in ["B", "b"]:
+                elif chr in ["B", "b"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N2X")
                     q = "N2X"
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = int(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -600,7 +600,7 @@ class Lexer:
 
                     nill()
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -611,7 +611,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -633,28 +633,25 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in binary number.")
+                    errors.append(f"Unexcepted char {chr} in binary number.")
                     q = "ER"
 
             elif q == "N2X":
-                if (
-                    _ in ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F"]
-                    or _ in self.numbers
-                ):
+                if chr in "abcdefABCDEF" or chr in self.numbers:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
-                elif _ in ["H", "h"]:
+                elif chr in ["H", "h"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = int(self.stack[:-1], 2)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -669,7 +666,7 @@ class Lexer:
 
                     nill()
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -680,7 +677,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.stack[:-1], 2)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -702,67 +699,67 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in binary number.")
+                    errors.append(f"Unexcepted char {chr} in binary number.")
                     q = "ER"
 
             elif q == "N8":
-                if _ in self.numbers[:9]:
+                if chr in self.numbers[:9]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N8")
                     q = "N8"
 
-                elif _ in self.numbers[:10]:
+                elif chr in self.numbers[:10]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N10")
                     q = "N10"
 
-                elif _ == ".":
+                elif chr == ".":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
-                elif _ in ["E", "e"]:
+                elif chr in ["E", "e"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NEXP")
                     q = "NEXP"
 
-                elif _ in ["D", "d"]:
+                elif chr in ["D", "d"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N10x")
                     q = "N10X"
 
-                elif _ in ["a", "b", "c", "f", "A", "B", "C", "F"]:
+                elif chr in "abcfABCF":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
-                elif _ in ["H", "h"]:
+                elif chr in ["H", "h"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
-                elif _ in ["O", "o"]:
+                elif chr in ["O", "o"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N8X")
                     q = "N8X"
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = int(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -777,7 +774,7 @@ class Lexer:
 
                     nill()
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -788,7 +785,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -810,11 +807,11 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in O-number.")
+                    errors.append(f"Unexcepted char {chr} in O-number.")
                     q = "ER"
 
             elif q == "N8X":
-                if _ in [" ", "\n"]:
+                if chr in [" ", "\n"]:
                     num = int(self.stack[:-1], 8)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -829,7 +826,7 @@ class Lexer:
 
                     nill()
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -840,7 +837,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.stack[:-1], 8)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -862,56 +859,56 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in binary number.")
+                    errors.append(f"Unexcepted char {chr} in binary number.")
                     q = "ER"
 
             elif q == "N10":
-                if _ in self.numbers[:10]:
+                if chr in self.numbers[:10]:
                     add()
 
-                elif _ == ".":
+                elif chr == ".":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NF")
                     q = "NF"
 
-                elif _ in ["E", "e"]:
+                elif chr in "Ee":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NEXP")
                     q = "NEXP"
 
-                elif _ in ["D", "d"]:
+                elif chr in "Dd":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N10X")
                     q = "N10X"
 
-                elif _ in ["a", "b", "c", "f", "A", "B", "C", "F"]:
+                elif chr in "abcfABCF":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
-                elif _ in ["H", "h"]:
+                elif chr in "Hh":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
-                elif _ in ["D", "d"]:
+                elif chr in "Dd":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N10X")
                     q = "N10X"
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = int(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -926,7 +923,7 @@ class Lexer:
 
                     nill()
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -937,7 +934,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -959,25 +956,25 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in D-number.")
+                    errors.append(f"Unexcepted char {chr} in D-number.")
                     q = "ER"
 
             elif q == "N10X":
-                if _ in ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F"]:
+                if chr in "abcdefABCDEF":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
-                elif _ in ["H", "h"]:
+                elif chr in ["H", "h"]:
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = int(self.stack[:-1])
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -992,7 +989,7 @@ class Lexer:
 
                     nill()
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -1003,7 +1000,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.stack[:-1])
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1025,27 +1022,14 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in D-number.")
+                    errors.append(f"Unexcepted char {chr} in D-number.")
                     q = "ER"
 
             elif q == "N16":
-                if _ in self.numbers or _ in [
-                    "a",
-                    "b",
-                    "c",
-                    "d",
-                    "e",
-                    "f",
-                    "A",
-                    "B",
-                    "C",
-                    "D",
-                    "E",
-                    "F",
-                ]:
+                if chr in self.numbers or chr in "abcdefABCDEF":
                     add()
 
-                elif _ in ["h", "H"]:
+                elif chr in "hH":
                     add()
 
                     if self.debug:
@@ -1054,11 +1038,11 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in H-number.")
+                    errors.append(f"Unexcepted char {chr} in H-number.")
                     q = "ER"
 
             elif q == "N16X":
-                if _ in [" ", "\n"]:
+                if chr in [" ", "\n"]:
                     num = int(self.stack[:-1], 16)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1070,7 +1054,7 @@ class Lexer:
                     if self.debug:
                         self.print_yellow(f"token '{num}' -> (4, {nid})")
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -1083,7 +1067,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.stack[:-1], 16)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1105,11 +1089,11 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in H-number.")
+                    errors.append(f"Unexcepted char {chr} in H-number.")
                     q = "ER"
 
             elif q == "NF":
-                if _ in self.numbers:
+                if chr in self.numbers:
                     self.add()
 
                     if self.debug:
@@ -1118,21 +1102,21 @@ class Lexer:
 
                 else:
                     self.nill()
-                    errors.append(f"Unexcepted char {_} in float number.")
+                    errors.append(f"Unexcepted char {chr} in float number.")
                     q = "ER"
 
             elif q == "NFX":
-                if _ in ["E", "e"]:
+                if chr in ["E", "e"]:
                     self.add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NFEXP")
                     q = "NFEXP"
 
-                elif _ in self.numbers:
+                elif chr in self.numbers:
                     self.add()
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1145,7 +1129,7 @@ class Lexer:
                     if self.debug:
                         self.print_yellow(f"token '{num}' -> (4, {nid})")
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -1158,7 +1142,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1180,29 +1164,29 @@ class Lexer:
 
                 else:
                     self.nill()
-                    errors.append(f"Unexcepted char {_} in float number.")
+                    errors.append(f"Unexcepted char {chr} in float number.")
                     q = "ER"
 
             elif q == "NFEXP":
                 add()
 
-                if _ in ["+", "-"]:
+                if chr in "+-":
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NFEXPZ")
                     q = "NFEXPZ"
 
-                elif _ in self.numbers:
+                elif chr in self.numbers:
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NFEXPX")
                     q = "NFEXPX"
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in exp number.")
+                    errors.append(f"Unexcepted char {chr} in exp number.")
                     q = "ER"
 
             elif q == "NFEXPZ":
-                if _ in self.numbers:
+                if chr in self.numbers:
                     add()
 
                     if self.debug:
@@ -1211,14 +1195,14 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in exp-float number.")
+                    errors.append(f"Unexcepted char {chr} in exp-float number.")
                     q = "ER"
 
             elif q == "NFEXPX":
-                if _ in self.numbers:
+                if chr in self.numbers:
                     add()
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = self.fexp_to_float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1231,7 +1215,7 @@ class Lexer:
                     if self.debug:
                         self.print_yellow(f"token '{num}' -> (4, {nid})")
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -1244,7 +1228,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = self.fexp_to_float(self.stack)
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1266,57 +1250,57 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in exp-float number.")
+                    errors.append(f"Unexcepted char {chr} in exp-float number.")
                     q = "ER"
 
             elif q == "NEXP":
                 add()
 
-                if _ in self.numbers:
+                if chr in self.numbers:
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NEXPX")
                     q = "NEXPX"
 
-                elif _ in ["+", "-"]:
+                elif chr in ["+", "-"]:
                     if self.debug:
                         self.print_yellow(f"q: {q} -> NEXPZ")
                     q = "NEXPZ"
 
-                elif _ in ["a", "b", "c", "d", "f", "A", "B", "C", "D", "F"]:
+                elif chr in "abcdfABCDF":
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
-                elif _ in ["H", "h"]:
+                elif chr in "Hh":
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in exp number.")
+                    errors.append(f"Unexcepted char {chr} in exp number.")
                     q = "ER"
 
             elif q == "NEXPX":
-                if _ in self.numbers:
+                if chr in self.numbers:
                     add()
                     continue
 
-                elif _ in ["a", "b", "c", "d", "f", "A", "B", "C", "D", "F"]:
+                elif chr in "abcdfABCDF":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16")
                     q = "N16"
 
-                elif _ in ["H", "h"]:
+                elif chr in "Hh":
                     add()
 
                     if self.debug:
                         self.print_yellow(f"q: {q} -> N16X")
                     q = "N16X"
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1329,7 +1313,7 @@ class Lexer:
                     if self.debug:
                         self.print_yellow(f"token '{num}' -> (4, {nid})")
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -1342,7 +1326,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1364,11 +1348,11 @@ class Lexer:
 
                 else:
                     stack = ""
-                    errors.append(f"Unexcepted char {_} in exp number.")
+                    errors.append(f"Unexcepted char {chr} in exp number.")
                     q = "ER"
 
             elif q == "NEXPZ":
-                if _ in self.numbers:
+                if chr in self.numbers:
                     add()
 
                     if self.debug:
@@ -1377,15 +1361,15 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in exp number.")
+                    errors.append(f"Unexcepted char {chr} in exp number.")
                     q = "ER"
 
             elif q == "NEXPZX":
-                if _ in self.numbers:
+                if chr in self.numbers:
                     add()
                     continue
 
-                elif _ in [" ", "\n"]:
+                elif chr in [" ", "\n"]:
                     num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1398,7 +1382,7 @@ class Lexer:
                     if self.debug:
                         self.print_yellow(f"token '{num}' -> (4, {nid})")
 
-                    if _ == "\n":
+                    if chr == "\n":
                         tokens.append((2, self.separators["\n"]))
                         if self.debug:
                             self.print_yellow(
@@ -1411,7 +1395,7 @@ class Lexer:
                         self.print_yellow(f"q: {q} -> H")
                     q = "H"
 
-                elif _ in self.separators:
+                elif chr in self.separators:
                     num = int(self.fexp_to_float(self.stack))
                     nid = self.in_table(num, numbers)
                     if nid is False:
@@ -1433,10 +1417,10 @@ class Lexer:
 
                 else:
                     nill()
-                    errors.append(f"Unexcepted char {_} in binary number.")
+                    errors.append(f"Unexcepted char {chr} in binary number.")
                     q = "ER"
 
-            if not _:
+            if not chr:
                 if tokens[-1] == (2, self.separators["\n"]):
                     tokens.pop(-1)
                 break

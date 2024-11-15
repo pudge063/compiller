@@ -1,7 +1,7 @@
 begin
 var dim x, y #;
 
-x assign 5;
+x assign 1ah;
 
 y assign 10
 
