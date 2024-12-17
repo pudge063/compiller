@@ -1,10 +1,10 @@
-1b
-1o
-1h
-1
-1d
-.1
-1.1e2
-1.1e+1
-1e2
-1e+2
+begin var dim A, bac #;
+A assign 12d;
+for I assign 2d val 100b do
+[ I + 1d : A - 2d ];
+if A < 100d then A * 2d else A / 2d end;
+while A != 1d do A - 1d;
+enter D E;
+(*comment*)
+displ D,E ;
+end
