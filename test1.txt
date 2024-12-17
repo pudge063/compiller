@@ -1,19 +1,17 @@
-begin
+begin var
 
 (* program body *)
 
-var dim x, y # (* integer variable *);
+dim x, y, f # (* integer variable *);
 
 x assign 2;
-y assign 2 * x;
-displ y;
+y assign 4;
 
-a assign 101.10E+3;
-a assign 2.12e-2;
 
-b assign true;
+while x < 5d do x - 1b next;
 
-dim c @;
-c assign 3e+4;
+enter x y ;
+displ y
+
 
 end

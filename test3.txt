@@ -1,8 +1,8 @@
 begin
 var dim a, b @
 [
-    a assign 2 : b assign 3 : [
-        c assign 5 : d assign 6
+    a assign 2 : [
+        b assign 6
     ]
 ]
 end
